@@ -5,6 +5,7 @@ import Link from "next/link";
 // import QuickLinks from "./QuickLinks";
 import dynamic from "next/dynamic";
 import Header from "./Header";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,16 +28,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased relative min-h-screen`}
       >
-        {/* Arka plan gradienti tüm sayfaya */}
-        <div className="fixed inset-0 -z-10 bg-gradient-to-br from-primary/10 via-white to-primary/5" />
-        <Header />
-        <main className="w-full px-4 sm:px-8 py-8 min-h-[80vh]">
-          {children}
-        </main>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {/* Arka plan gradienti tüm sayfaya */}
+          <div className="fixed inset-0 -z-10 bg-gradient-to-br from-primary/10 via-white to-primary/5 dark:from-primary/5 dark:via-gray-900 dark:to-primary/10" />
+          <Header />
+          <main className="w-full px-4 sm:px-8 py-8 min-h-[80vh]">
+            {children}
+          </main>
+        </ThemeProvider>
       </body>
     </html>
   );
