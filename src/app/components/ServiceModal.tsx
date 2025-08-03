@@ -1,11 +1,11 @@
 "use client";
 import { useState } from "react";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Carousel,
   CarouselContent,
@@ -13,7 +13,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { X } from "lucide-react";
 
 interface ServiceModalProps {
   isOpen: boolean;
@@ -59,76 +58,105 @@ const serviceData = {
 };
 
 export default function ServiceModal({ isOpen, onClose, service }: ServiceModalProps) {
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const data = service ? serviceData[service] : null;
 
   if (!data) return null;
 
+  const openImageModal = (index: number) => {
+    setSelectedImageIndex(index);
+  };
+
+  const closeImageModal = () => {
+    setSelectedImageIndex(null);
+  };
+
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="bottom" className="h-[80vh] w-[90vw] max-w-5xl mx-auto p-4 sm:p-6 overflow-y-auto">
-        <SheetHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="text-lg sm:text-xl md:text-2xl font-bold text-primary break-words">
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+          <DialogHeader className="px-6 py-4 border-b">
+            <DialogTitle className="text-lg sm:text-xl md:text-2xl font-bold text-primary break-words">
               {data.title}
-            </SheetTitle>
-            <button
-              onClick={onClose}
-              className="rounded-full p-2 hover:bg-muted transition-colors flex-shrink-0"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 p-6">
+            {/* Fotoğraf Galerisi - Grid Layout */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {data.images.map((image, index) => (
+                <div 
+                  key={index} 
+                  className="aspect-square bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                  onClick={() => openImageModal(index)}
+                >
+                  <div className="text-center">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 mx-auto">
+                      <span className="text-xl sm:text-2xl md:text-3xl">
+                        {service === "organizasyon" ? "🍽️" : "❄️"}
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-muted-foreground break-words">
+                      Fotoğraf {index + 1}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Açıklama */}
+            <div>
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-3 break-words">Hakkında</h3>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed break-words">
+                {data.description}
+              </p>
+            </div>
+
+            {/* Özellikler */}
+            <div>
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-3 break-words">Özelliklerimiz</h3>
+              <ul className="space-y-2">
+                {data.features.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-2 text-sm sm:text-base text-muted-foreground break-words">
+                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full flex-shrink-0 mt-1.5 sm:mt-2"></span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </SheetHeader>
-        
-        <div className="space-y-4 sm:space-y-6">
-          {/* Fotoğraf Galerisi */}
-          <div className="relative">
+        </DialogContent>
+      </Dialog>
+
+      {/* Fotoğraf Büyütme Modal */}
+      <Dialog open={selectedImageIndex !== null} onOpenChange={closeImageModal}>
+        <DialogContent className="w-[80vw] max-w-sm max-h-[50vh] p-2 bg-black border-0">
+          <div className="relative w-full flex items-center justify-center">
             <Carousel className="w-full">
               <CarouselContent>
                 {data.images.map((image, index) => (
                   <CarouselItem key={index}>
-                    <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex items-center justify-center">
+                    <div className="bg-gradient-to-br from-primary/30 to-secondary/30 rounded-lg flex items-center justify-center p-2 min-h-[150px]">
                       <div className="text-center">
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4 mx-auto">
-                          <span className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center mb-2 mx-auto shadow-lg">
+                          <span className="text-lg sm:text-xl md:text-2xl">
                             {service === "organizasyon" ? "🍽️" : "❄️"}
                           </span>
                         </div>
-                        <p className="text-sm text-muted-foreground break-words">
-                          {image.alt} - Fotoğraf {index + 1}
+                        <p className="text-xs text-white break-words font-medium">
+                          Fotoğraf {index + 1}
                         </p>
                       </div>
                     </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious />
-              <CarouselNext />
+              <CarouselPrevious className="left-1 bg-black/60 border-white/30 text-white hover:bg-black/80 h-6 w-6" />
+              <CarouselNext className="right-1 bg-black/60 border-white/30 text-white hover:bg-black/80 h-6 w-6" />
             </Carousel>
           </div>
-
-          {/* Açıklama */}
-          <div>
-            <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-2 sm:mb-3 break-words">Hakkında</h3>
-            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed break-words">
-              {data.description}
-            </p>
-          </div>
-
-          {/* Özellikler */}
-          <div>
-            <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-2 sm:mb-3 break-words">Özelliklerimiz</h3>
-            <ul className="space-y-2">
-              {data.features.map((feature, index) => (
-                <li key={index} className="flex items-start gap-2 text-sm sm:text-base text-muted-foreground break-words">
-                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full flex-shrink-0 mt-1.5 sm:mt-2"></span>
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 } 
