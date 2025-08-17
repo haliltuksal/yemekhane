@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String?  @unique
+  name      String
+  phone     String?
+  address   String?
+  city      String?
+  zipCode   String?
+  role      UserRole @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+  notifications NotificationLog[]
+
+  @@map("users")
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  userId          String
+  orderNumber     String        @unique
+  status          OrderStatus   @default(PENDING)
+  totalAmount     Decimal       @db.Decimal(10, 2)
+  deliveryTime    DateTime?
+  deliveryAddress String
+  deliveryCity    String?
+  deliveryZipCode String?
+  notes           String?       @db.Text
+  paymentMethod   PaymentMethod
+  paymentStatus   PaymentStatus @default(PENDING)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  orderItems      OrderItem[]
+  user            User          @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "orders_userId_fkey")
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  menuItemId String
+  quantity   Int
+  price      Decimal  @db.Decimal(10, 2)
+  notes      String?  @db.Text
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([menuItemId], map: "order_items_menuItemId_fkey")
+  @@index([orderId], map: "order_items_orderId_fkey")
+  @@map("order_items")
+}
+
+model MenuItem {
+  id          String      @id @default(cuid())
+  name        String
+  description String?     @db.Text
+  price       Decimal     @db.Decimal(10, 2)
+  categoryId  String
+  image       String?
+  isAvailable Boolean     @default(true)
+  isSpecial   Boolean     @default(false)
+  calories    Int?
+  allergens   String?     @db.Text
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  category    Category    @relation(fields: [categoryId], references: [id])
+  orderItems  OrderItem[]
+
+  @@index([categoryId], map: "menu_items_categoryId_fkey")
+  @@map("menu_items")
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String?    @db.Text
+  image       String?
+  isActive    Boolean    @default(true)
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  menuItems   MenuItem[]
+
+  @@map("categories")
+}
+
+model Content {
+  id              String   @id @default(cuid())
+  page            String   @unique
+  title           String
+  content         String   @db.LongText
+  metaTitle       String?
+  metaDescription String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("contents")
+}
+
+model Certificate {
+  id          String    @id @default(cuid())
+  name        String
+  description String?   @db.Text
+  image       String
+  issueDate   DateTime?
+  expiryDate  DateTime?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("certificates")
+}
+
+model NotificationLog {
+  id        String   @id @default(cuid())
+  type      String   // NEW_ORDER, ORDER_STATUS_UPDATE, PAGE_VISIT
+  message   String
+  data      Json?    // Bildirim verileri (JSON)
+  timestamp DateTime @default(now())
+  userId    String?  // Hangi admin kullanıcısı bildirimi aldı
+  user      User?    @relation(fields: [userId], references: [id])
+  
+  @@map("notification_logs")
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+  CUSTOMER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERING
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  ONLINE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
